@@ -19,9 +19,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
 import google.auth
-from google.adk.agents import Agent, RunConfig  # Importar Agent y RunConfig
+from google.adk.agents import Agent, RunConfig, LiveRequestQueue  # Importar Agent y RunConfig
 from google.adk.runners import Runner
-from google.genai import types
+from google.genai import types as genai_types
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai.types import GenerateContentConfig
 
@@ -35,7 +35,7 @@ os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 # --- Configuración del Modelo ---
-MODEL_ID = "gemini-2.0-flash-live-preview-04-09" # Para modo Live
+MODEL_ID = "gemini-2.0-flash-001" # 
 
 # --- Configuración de BigQuery ---
 BIGQUERY_PROJECT_ID = "fon-test-project"
@@ -414,42 +414,52 @@ root_agent = Agent(
     ],
 )
 
+#voice_config = genai_types.VoiceConfig(
+#    prebuilt_voice_config=genai_types.PrebuiltVoiceConfigDict(
+#        voice_name='Aoede'
+#    )
+#)
+
+#speech_config = genai_types.SpeechConfig(language_code="es-ES",voice_config=voice_config)
+
+
 # 2. RunConfig for the Runner (General Runner configuration)
-runner_config = RunConfig(
-    response_modalities=["AUDIO", "TEXT"],
-    save_input_blobs_as_artifacts=True,
-    support_cfc=True,
-    #streaming_mode=types.StreamingMode.SSE,
-    max_llm_calls=1000,
-)
+#runner_config = RunConfig(
+#    response_modalities=["AUDIO", "TEXT"],
+#    save_input_blobs_as_artifacts=True,
+#    support_cfc=True,
+#    #streaming_mode=types.StreamingMode.SSE,
+#    max_llm_calls=1000,
+#)
 
 # 3. RunConfig with the SpeechConfig
-speech_run_config = RunConfig(
-    speech_config=types.SpeechConfig(
-        language_code="es-ES",
-        ),
-)
+#run_config = RunConfig(
+#    speech_config=speech_config
+#    )
+
 
 # Create a session
-session_service = InMemorySessionService()
-session = session_service.create_session(
-        app_name="My App", user_id="test_user", session_id="test_session_id"
-    )
+#session_service = InMemorySessionService()
+#session = session_service.create_session(
+#        app_name="My App", user_id="test_user", session_id="test_session_id"
+#    )
 
 # 5. Create the Runner, passing the agent and the runner_config
-runner = Runner(
-    app_name="My App",
-    agent=root_agent,
-    session_service=session_service,
-)
+#runner = Runner(
+#    app_name="My App",
+#    agent=root_agent,
+#    session_service=session_service
+#)
+
+#live_request_queue = LiveRequestQueue()
+
 
 # Example of how to invoke the runner, you can use this code to test your agent
-async def run_with_speech_config():
-    events = runner.run_live(
-        session=session,
-        live_request_queue=None,
-        speech_config=speech_run_config.speech_config
-    )
-    async for event in events:
-        print(event)
-
+#async def run_with_speech_config():
+#    events = runner.run_live(
+#        session=session,
+#        live_request_queue=live_request_queue,
+#        run_config=run_config
+#    )
+#    async for event in events:
+#        print(event)
