@@ -15,6 +15,8 @@
 import os
 
 from fastapi import FastAPI
+# Modificaciones para habilitar CORS
+from fastapi.middleware.cors import CORSMiddleware
 from google.adk.cli.fast_api import get_fast_api_app
 from google.cloud import logging as google_cloud_logging
 from opentelemetry import trace
@@ -33,6 +35,17 @@ trace.set_tracer_provider(provider)
 
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app: FastAPI = get_fast_api_app(agents_dir=AGENT_DIR, web=True)
+
+# Modificaciones para habilitar CORS
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.title = "adk-travel-agent-cr"
 app.description = "API for interacting with the Agent adk-travel-agent-cr"
