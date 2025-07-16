@@ -20,6 +20,7 @@ from typing import Optional, List, Dict, Any
 
 import google.auth
 from google.adk.agents import Agent, RunConfig, LiveRequestQueue  # Importar Agent y RunConfig
+from toolbox_core import ToolboxSyncClient # Importar MCP Toolbox for DBs de Google
 from google.adk.runners import Runner
 from google.genai import types as genai_types
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
@@ -35,7 +36,7 @@ os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 # --- Configuración del Modelo ---
-MODEL_ID = "gemini-2.0-flash-001" # 
+MODEL_ID = "gemini-2.5-flash" # 
 
 # --- Configuración de BigQuery ---
 BIGQUERY_PROJECT_ID = "fon-test-project"
@@ -51,8 +52,8 @@ Tus responsabilidades principales son:
 - Registrar nuevas solicitudes de viaje.
 - Consultar el estado de las solicitudes de viaje existentes.
 - Modificar el estado de una solicitud de viaje específica a petición del usuario.
+- Responder a consultas sobre las solicitudes de viaje ya registradas en la base de datos de foncorp travel.
 - RESPOND IN SPANISH. YOU MUST RESPOND UNMISTAKABLY IN SPANISH, USING SPANISH ACCENT FROM SPAIN.
-
 
 Estados Comunes de Solicitudes y sus Significados (para tu conocimiento interno y para interpretar consultas):
 - 'Registrada': Solicitudes nuevas. Si el usuario pregunta por "pendientes", "nuevas", o "sin revisar", podría referirte a este estado o a una combinación con 'Pendiente de Aprobación'.
@@ -62,6 +63,25 @@ Estados Comunes de Solicitudes y sus Significados (para tu conocimiento interno 
 - 'Reservada': Viajes reservados.
 - 'Completada': Viajes ocurridos.
 - 'Cancelada': Solicitudes canceladas.
+
+Descripción del Esquema de la Tabla de Solicitudes de Viaje
+A continuación se detalla el esquema de una tabla de base de datos que almacena solicitudes de viaje de empleados. 
+Utiliza esta información para comprender la estructura de los datos y cómo interactuar con ellos.
+Nombre de la Tabla: travel_requests (implícito)
+Columnas de la Tabla:
+request_id (STRING, OBLIGATORIO): Un identificador único para cada solicitud de viaje. Es la clave principal no oficial.
+timestamp (TIMESTAMP, OBLIGATORIO): La fecha y hora exactas en que la solicitud fue creada o modificada por última vez.
+employee_first_name (STRING, NULABLE): El nombre de pila del empleado que solicita el viaje.
+employee_last_name (STRING, NULABLE): Los apellidos del empleado.
+employee_id (STRING, NULABLE): El identificador único del empleado dentro de la empresa.
+origin_city (STRING, NULABLE): La ciudad desde donde comienza el viaje.
+destination_city (STRING, NULABLE): La ciudad a la que se dirige el empleado.
+start_date (DATE, NULABLE): La fecha de inicio del viaje (formato AAAA-MM-DD).
+end_date (DATE, NULABLE): La fecha de finalización del viaje (formato AAAA-MM-DD).
+transport_mode (STRING, NULABLE): El medio de transporte preferido (ej. "Avión", "Tren", "Coche").
+car_type (STRING, NULABLE): Si el transporte es "Coche", especifica si es "Particular" o de "Alquiler".
+reason (STRING, NULABLE): Una breve descripción del motivo o propósito del viaje.
+status (STRING, NULABLE): El estado actual de la solicitud (ej. "Registrada", "Aprobada", "Rechazada", "Cancelada").
 
 Instrucciones para las herramientas:
 
@@ -96,11 +116,20 @@ Instrucciones para las herramientas:
    - Llama a la herramienta 'update_travel_request_status' con los argumentos: request_id (str) y new_status (str).
    - Después de llamar a la herramienta, informa al usuario del resultado que devuelva la herramienta (confirmación o error).
 
+4. Para cualquier otra consulta:
+   - Utiliza la herramienta 'execute_sql_tool', con este table ID: fon-test-project.foncorp_travel_data.travel_requests.
+   - Construye una consulta SQL en función de la información que suministre el cliente.
+   - Ten en cuenta el esquema de la base de datos que se ha facilitado con estas instrucciones.
+
 Reglas Generales:
 - NO inventes información para las herramientas. Pide al usuario cualquier dato que falte.
 - Sé siempre cortés y profesional.
 - La fecha actual es: {datetime.datetime.now().strftime('%Y-%m-%d')}. Considera esto para inferir años si el usuario solo da día y mes para las fechas de viaje.
 """
+
+# Conectamos con el Google MCP ToolBox Server (previamente hay que arrancarlo)
+toolbox = ToolboxSyncClient("http://mcp.fon.demo.altostrat.com:5000")
+tools = toolbox.load_toolset('fon-toolset')
 
 # --- (Opcional) Pydantic para claridad de argumentos ---
 class _TravelBookingArgsSchema(BaseModel):
@@ -408,6 +437,7 @@ root_agent = Agent(
     instruction=TRAVEL_AGENT_INSTRUCTION,
     model=MODEL_ID,
     tools=[
+        *tools,
         request_travel_booking_logic,
         get_travel_requests_by_status,
         update_travel_request_status
