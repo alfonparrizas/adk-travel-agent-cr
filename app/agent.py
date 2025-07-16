@@ -128,7 +128,8 @@ Reglas Generales:
 """
 
 # Conectamos con el Google MCP ToolBox Server (previamente hay que arrancarlo)
-toolbox = ToolboxSyncClient("http://mcp.fon.demo.altostrat.com:5000")
+# toolbox = ToolboxSyncClient("http://mcp.fon.demo.altostrat.com:5000")
+toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
 tools = toolbox.load_toolset('fon-toolset')
 
 # --- (Opcional) Pydantic para claridad de argumentos ---
