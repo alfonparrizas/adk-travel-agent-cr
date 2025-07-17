@@ -18,11 +18,13 @@ RUN pip install --no-cache-dir uv==0.6.12
 
 WORKDIR /code
 
-COPY ./pyproject.toml ./README.md ./uv.lock* ./
+COPY ./pyproject.toml ./requirements.txt ./README.md ./uv.lock* ./
 
 COPY ./app ./app
 
 RUN uv sync --frozen
+
+RUN uv pip list
 
 EXPOSE 8080
 

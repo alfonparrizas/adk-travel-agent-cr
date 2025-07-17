@@ -32,7 +32,7 @@ import asyncio
 
 _, project_id = google.auth.default()
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-southwest1")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 # --- Configuración del Modelo ---
@@ -129,7 +129,8 @@ Reglas Generales:
 
 # Conectamos con el Google MCP ToolBox Server (previamente hay que arrancarlo)
 # toolbox = ToolboxSyncClient("http://mcp.fon.demo.altostrat.com:5000")
-toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
+toolbox = ToolboxSyncClient("https://toolbox-429460911019.europe-southwest1.run.app")
+#toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
 tools = toolbox.load_toolset('fon-toolset')
 
 # --- (Opcional) Pydantic para claridad de argumentos ---
