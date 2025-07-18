@@ -131,7 +131,7 @@ Reglas Generales:
 # toolbox = ToolboxSyncClient("http://mcp.fon.demo.altostrat.com:5000")
 toolbox = ToolboxSyncClient("https://toolbox-429460911019.europe-southwest1.run.app")
 #toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
-tools = toolbox.load_toolset('fon-toolset')
+tools = toolbox.load_toolset('adk-travel-agent-toolset')
 
 # --- (Opcional) Pydantic para claridad de argumentos ---
 class _TravelBookingArgsSchema(BaseModel):
